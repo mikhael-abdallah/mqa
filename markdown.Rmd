@@ -1,0 +1,149 @@
+# **Trabalho Final de MQAM**
+
+Setup:
+
+```{r setup, include=FALSE}
+library(reticulate)
+```
+
+Instalar bibliotecas do python:
+
+```{bash}
+pip install pandas numpy openpyxl factor_analyzer matplotlib tabulate
+```
+
+Importar bibliotecas:
+
+```{python}
+import numpy as np
+import pandas as pd
+```
+
+## Leitura dos dados e junção dos dados
+
+Ler arquivo dos dados de publicações:
+
+```{python}
+publi = pd.read_csv(open('./Dados_de_Publicacoes.txt', 'r'), sep='\t',  encoding='ISO-8859-1', low_memory=False) # Dados_de_Publicacoes.txt
+```
+
+Nesse arquivo, os ids das instituições estão com 3 caracteres a mais que diferem das outras planilhas, portanto, para fazer as junções, precisamos removê-los:
+
+```{python}
+publi['id_institution'] = publi['id_institution'].apply(lambda x: x[:-3])
+```
+
+Ler o arquivo das subdisciplinas:
+
+```{python}
+subdisciplinas = pd.read_excel("./Subdisciplinas.xlsx")
+```
+
+Nesse arquivo, o nome da coluna do id da subdisciplina difere da outra planilha, portanto precisamos renomeá-la.
+
+```{python}
+subdisciplinas.rename(columns = {'subd_id':'sub-discipline'}, inplace = True)
+```
+
+Agora podemos fazer o merge entre os dados das publicações e as subdisciplinas:
+
+```{python}
+publi_subd = pd.merge(publi, subdisciplinas,how = 'inner',on='sub-discipline')
+```
+
+Leitura da planilha de instituições:
+
+```{python}
+instituicoes_nova = pd.read_csv('./Instituicoes_nova.txt', sep='\t',  encoding='ISO-8859-1')
+```
+
+Nesse arquivo, o nome da coluna do id da instituição difere da outra planilha, portanto precisamos renomeá-la.
+
+```{python}
+instituicoes_nova.rename(columns = {'InstitutionID':'id_institution'}, inplace = True)
+```
+
+Agora podemos fazer o merge com os nossos dados, já que cada linha tem o id de uma instituição:
+
+```{python}
+pub_subd_inst = pd.merge(publi_subd, instituicoes_nova, how = 'inner',on="id_institution")
+```
+
+Leitura da planilha com o PIB dos Municípios:
+
+```{python}
+PIB_Muni = pd.read_excel('./PIB dos Municípios - base de dados 2010-2015.xlsx')
+```
+
+Nesse arquivo, o nome da coluna do id do município difere da outra planilha, portanto precisamos renomeá-la.
+
+```{python}
+pub_subd_inst.rename(columns = {'Municipality_ID':'Código do Município'}, inplace = True)
+```
+
+Agora podemos fazer o merge com os nossos dados, já que cada linha tem o id de um município:
+
+```{python}
+pub_subd_inst_PIB = pd.merge(pub_subd_inst ,PIB_Muni, how='inner',on='Código do Município')
+```
+
+## Análise fatorial
+
+```{python}
+from factor_analyzer import FactorAnalyzer
+import matplotlib.pyplot as plt
+```
+
+```{python}
+pub_subd_inst_PIB.columns
+pub_subd_inst_PIB.dropna(inplace=True)
+pub_subd_inst_PIB.info
+```
+
+Para fazer a análise fatorial, criamos uma cópia dos dados e removeremos algumas colunas.
+
+```{python}
+copia = pub_subd_inst_PIB.copy()
+
+copia.drop(['id','subd_name','sub-discipline','number_of_authors_publication','weight_authorship','weight_journal_indexation','weight_final','Nome do Município','Nome da Unidade da Federação','InstitutionName'],axis=1,inplace=True)
+  
+copia.drop(['Nome da Mesorregião','Nome da Microrregião','Municipality_Name'],axis=1,inplace=True)
+
+copia.drop(['id_institution'],axis=1,inplace=True)
+copia.drop(['Região Metropolitana'],axis=1,inplace=True)
+copia.drop(['Atividade com maior valor adicionado bruto','Atividade com segundo maior valor adicionado bruto','Atividade com terceiro maior valor adicionado bruto'],axis=1,inplace=True)
+
+copia.dropna(inplace=True)
+```
+
+Importação e execução da análise fatorial:
+
+```{python}
+from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
+import matplotlib as plt
+
+fa = FactorAnalyzer(rotation='varimax')
+
+fa.fit(copia)
+```
+
+```{python}
+ev, v = fa.get_eigenvalues()
+sorted(ev)
+```
+
+Plot dos autovalores:
+
+```{python}
+plt.pyplot.scatter(range(1,copia.shape[1]+1),ev)
+plt.pyplot.plot(range(1,copia.shape[1]+1),ev)
+plt.pyplot.title('Scree Plot')
+plt.pyplot.grid()
+plt.pyplot.show()
+```
+
+Tabela:
+
+```{python}
+pd.DataFrame(fa.loadings_,columns=['Fator1','Fator2','Fator3'],index=[copia.columns])
+```

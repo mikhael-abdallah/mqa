@@ -1,4 +1,33 @@
-# **Trabalho Final de MQAM**
+<p align="center"><br/>
+  Trabalho final de MQAM
+</p>
+<br/>
+<br/>
+<br/>
+<br/>
+<p align="center"><br/>
+  Andre Rocha <br/>
+  Lizandro Raposo<br/>
+  Mikhael Abdallah<br/>
+  Otavio Bambans<br/>
+  Vitor Sacchi<br/>
+</p>
+<br/>
+<br/>
+<br/>
+<br/>
+
+# 1. INTRODUÇÃO
+O presente trabalho é sobre análise de dados em datasets variados, ele visa demonstrar que houve o aprendizado e o entendimento das diversas técnicas de análise apresentadas durante o semestre.
+
+# 2. Metodologia
+
+Foram utilizados os métodos de Análise Fatorial para uma análise introdutório dos dados,foram usados os seguintes datasets: [Instituições_nova.docx](https://github.com/mikhael-abdallah/mqa/blob/main/Instituicoes_nova.docx), [Subdisciplinas.xlsx](https://github.com/mikhael-abdallah/mqa/blob/main/Subdisciplinas.xlsx),[Dados_de_Publicacoes.txt](https://github.com/mikhael-abdallah/mqa/blob/main/Dados_de_Publicacoes.txt),[Dados_de_Publicacoes.txt](https://github.com/mikhael-abdallah/mqa/blob/main/Dados_de_Publicacoes.txt) e o dataset de [PIB dos Municípios - base de dados 2010-2015.xlsx](https://github.com/mikhael-abdallah/mqa/blob/main/PIB%20dos%20Munic%C3%ADpios%20-%20base%20de%20dados%202010-2015.xlsx). A ideia de usar a Análise Fatorial sobre esses datasets foi para descobrir quais as variáveis que mais influenciam nos dados apresentados e dá para separar elas em fatores diferentes.
+
+
+Segue o que foi feito para a Análise Fatorial.
+
+## 2.1 Passo a Passo
 
 Setup:
 
@@ -19,7 +48,7 @@ import numpy as np
 import pandas as pd
 ```
 
-## Leitura dos dados e junção dos dados
+### 2.1.1 Leitura e junção dos dados
 
 Ler arquivo dos dados de publicações:
 
@@ -87,12 +116,15 @@ Agora podemos fazer o merge com os nossos dados, já que cada linha tem o id de 
 pub_subd_inst_PIB = pd.merge(pub_subd_inst ,PIB_Muni, how='inner',on='Código do Município')
 ```
 
-## Análise fatorial
+### 2.1.2 Análise fatorial
+
+Importando as bibliotecas necessárias
 
 ```{python}
 from factor_analyzer import FactorAnalyzer
 import matplotlib.pyplot as plt
 ```
+Aqui, avaliamos o dataset e retiramos os valores nulos com o .dropna()
 
 ```{python}
 pub_subd_inst_PIB.columns
@@ -104,15 +136,11 @@ Para fazer a análise fatorial, criamos uma cópia dos dados e removeremos algum
 
 ```{python}
 copia = pub_subd_inst_PIB.copy()
-
 copia.drop(['id','subd_name','sub-discipline','number_of_authors_publication','weight_authorship','weight_journal_indexation','weight_final','Nome do Município','Nome da Unidade da Federação','InstitutionName'],axis=1,inplace=True)
-  
 copia.drop(['Nome da Mesorregião','Nome da Microrregião','Municipality_Name'],axis=1,inplace=True)
-
 copia.drop(['id_institution'],axis=1,inplace=True)
 copia.drop(['Região Metropolitana'],axis=1,inplace=True)
 copia.drop(['Atividade com maior valor adicionado bruto','Atividade com segundo maior valor adicionado bruto','Atividade com terceiro maior valor adicionado bruto'],axis=1,inplace=True)
-
 copia.dropna(inplace=True)
 ```
 
@@ -121,12 +149,11 @@ Importação e execução da análise fatorial:
 ```{python}
 from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
 import matplotlib as plt
-
-fa = FactorAnalyzer(rotation='varimax')
-
+fa = FactorAnalyzer(3,rotation='varimax')
 fa.fit(copia)
 ```
-
+Aqui retiramos e analisamos os autovalores, desse passo já para decidir o
+número de fatores, mas para uma certeza maior, melhor irmos para a análise gráfica
 ```{python}
 ev, v = fa.get_eigenvalues()
 sorted(ev)
@@ -135,15 +162,209 @@ sorted(ev)
 Plot dos autovalores:
 
 ```{python}
-plt.pyplot.scatter(range(1,copia.shape[1]+1),ev)
-plt.pyplot.plot(range(1,copia.shape[1]+1),ev)
-plt.pyplot.title('Scree Plot')
-plt.pyplot.grid()
-plt.pyplot.show()
+plt.scatter(range(1,copia.shape[1]+1),ev)
+plt.plot(range(1,copia.shape[1]+1),ev)
+plt.title('Scree Plot')
+plt.xlabel('Fatores')
+plt.ylabel('Auto-Valor')
+plt.grid()
+plt.show()
 ```
+<p align="center">
+  Figura 1 - Plot dos autovalores <br/>
+  <img src="data:image/png;base64,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" width="300" /><br/>
+</p>
 
-Tabela:
+A partir do resultado acima, concluimos que o número fatores seriam 3 e então, geramos a tabela para decidir quais elementos iriam para cada um do fatores.
+
 
 ```{python}
 pd.DataFrame(fa.loadings_,columns=['Fator1','Fator2','Fator3'],index=[copia.columns])
 ```
+
+
+<table>
+	<caption>Cargas Fatoriais</caption>
+	<thead>
+	<tr>
+		<th>Variável</th>
+		<th>Fator 1</th>
+		<th>Fator 2</th>
+		<th>Fator 3</th>
+	</tr>
+	</thead>
+    <tr>
+        <td>year</td>
+        <td>-0.015963</td>
+        <td>0.001497</td>
+        <td>-0.015718</td>
+    </tr>
+    <tr>
+        <td>journal</td>
+        <td>0.003407</td>
+        <td>-0.012903</td>
+        <td>0.027217</td>
+    </tr>
+    <tr>
+        <td>disc_id</td>
+        <td>0.034267</td>
+        <td>-0.013545</td>
+        <td>-0.048423</td>
+    </tr>
+    <tr>
+        <td>State_ID</td>
+        <td>-0.015574</td>
+        <td>0.998985</td>
+        <td>0.034111</td>
+    </tr>
+    <tr>
+        <td>Mesoregion_ID</td>
+        <td>-0.015520</td>
+        <td>0.998987</td>
+        <td>0.034091</td>
+    </tr>
+    <tr>
+        <td>Microregion_ID</td>
+        <td>-0.015362</td>
+        <td>0.998994</td>
+        <td>0.034013</td>
+    </tr>
+    <tr>
+        <td>Código do Município</td>
+        <td>0.003178</td>
+        <td>0.999414</td>
+        <td>0.025917</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>0.084809</td>
+        <td>0.003324</td>
+        <td>0.257425</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto da Agropecuária, a preços correntes\n(R$ 1.000)</td>
+        <td>-0.124406</td>
+        <td>0.424428</td>
+        <td>0.673788</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto da Indústria, a preços correntes\n(R$ 1.000)</td>
+        <td>0.992690</td>
+        <td>-0.077744</td>
+        <td>0.007270</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto dos Serviços, a preços correntes - exclusive Administração, defesa, educação e saúde públicas e seguridade social\n(R$ 1.000)</td>
+        <td>0.989111</td>
+        <td>-0.011594</td>
+        <td>0.023997</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto da Administração, defesa, educação e saúde públicas e seguridade social\n(R$ 1.000)</td>
+        <td>0.696580</td>
+        <td>0.224322</td>
+        <td>0.615055</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto total, a preços correntes\n(R$ 1.000)</td>
+        <td>0.993435</td>
+        <td>0.003651</td>
+        <td>0.087817</td>
+    </tr>
+    <tr>
+        <td>Impostos, líquidos de subsídios, sobre produtos, a preços correntes\n(R$ 1.000)</td>
+        <td>0.995868</td>
+        <td>-0.027896</td>
+        <td>0.064240</td>
+    </tr>
+    <tr>
+        <td>Produto Interno Bruto, a preços correntes\n(R$ 1.000)</td>
+        <td>0.995256</td>
+        <td>-0.002259</td>
+        <td>0.083499</td>
+    </tr>
+    <tr>
+        <td>População\n(Nº de habitantes)</td>
+        <td>0.990418</td>
+        <td>-0.063307</td>
+        <td>0.010101</td>
+    </tr>
+    <tr>
+        <td>Produto Interno Bruto per capita\n(R$ 1,00)</td>
+        <td>0.547074</td>
+        <td>0.404562</td>
+        <td>0.434139</td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+    <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+    </tr>
+</table>
+
+A análise feita da tabela acima é a seguinte:
+O primeiro fator, qual nomeamos de financeiro, o qual envolve boa parte das variáveis relacionadas a investimento e dinheiro, como PIB do município e dos valores adicionados a áreas especeficias da economia além da população, variável que faz sentido estar presente nesse fator, afinal, uma população maior gera mais PIB. O fator dois, o qual nomearemos de Regionalidade indica que as variáveis que se relacionam diretamente com a localização explicam uma boa parte do dataset. Com o terceiro valor, não há nenhuma variável com uma carga fatorial alta, ou seja, podemos concluir que a gente poderia refazer a análise utilizando apenas 2 fatores, mas náo há a necessidade, a gente só náo vai utiliza-lo como fator, assim temos:
+
+<table>
+	<caption>Fator Financeiro</caption>
+	<thead>
+	<tr>
+		<th>Variável</th>
+	</tr>
+	</thead>
+    <tr>
+        <td>Valor adicionado bruto da Indústria, a preços correntes\n(R$ 1.000)</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto dos Serviços, a preços correntes - exclusive Administração, defesa, educação e saúde públicas e seguridade social\n(R$ 1.000)</td>
+    </tr>
+    <tr>
+        <td>Valor adicionado bruto total, a preços correntes\n(R$ 1.000)</td>
+    </tr>
+    <tr>
+        <td>Impostos, líquidos de subsídios, sobre produtos, a preços correntes\n(R$ 1.000)</td>
+    </tr>
+    <tr>
+        <td>Produto Interno Bruto, a preços correntes\n(R$ 1.000)</td>
+    </tr>
+    <tr>
+        <td>População\n(Nº de habitantes)</td>
+    </tr>
+</table>
+
+
+<table>
+	<caption>Fator Regional</caption>
+	<thead>
+	<tr>
+		<th>Variável</th>
+	</tr>
+	</thead>
+    <tr>
+        <td>ID_Estado</td>
+    </tr>
+    <tr>
+        <td>Mesoregion_ID</td>
+    </tr>
+    <tr>
+        <td>Microregion_ID</td>
+    </tr>
+    <tr>
+        <td>Código do Município</td>
+    </tr>
+</table>
+
+Com isso posto, já podemos fazer uma análise simples. Primeiramente quando vamos analisar quais fatores que também envolvem finanças que ficaram de fora do fator, percebe-se que tanto o PIB per capta quanto o Valor adicionado bruto da Agropecuária não entraram nele, o que pode significar que para boa parte dos municípios analisados a Agropecuária não é um setor tão importante.
